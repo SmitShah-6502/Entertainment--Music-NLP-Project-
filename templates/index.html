@@ -1,0 +1,353 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recommendation System 🎬🎵📖</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1E3C72, #2A5298);
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        h1 { font-size: 2.5em; margin-bottom: 10px; }
+        h2 { font-size: 1.8em; margin-top: 20px; }
+
+        select, button, textarea {
+            font-size: 16px;
+            padding: 12px;
+            margin: 10px;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        button {
+            background: #FFC107; color: #222; font-weight: bold;
+            cursor: pointer; padding: 12px 20px;
+            box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
+        }
+
+        button:hover { background: #ff9800; box-shadow: 0 6px 12px rgba(255, 152, 0, 0.4); }
+
+        .container {
+            display: flex; justify-content: space-around; flex-wrap: wrap;
+        }
+
+        .recommendations {
+            width: 45%; min-width: 300px;
+            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px);
+            padding: 20px; border-radius: 12px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); margin-top: 20px;
+        }
+
+        .movie-card, .music-card, .story-card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px; margin: 10px; border-radius: 12px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); text-align: left;
+        }
+
+        #story_output p {
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+
+        .story-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🎬 Movie & 🎵 Music Recommendation System 📖</h1>
+
+    <div class="container">
+        <div class="recommendations">
+            <h2>🎥 Movies</h2>
+            <label><strong>Select a Genre:</strong></label>
+            <select id="movie_genre">
+                <option value="Action">🔥 Action</option>
+                <option value="Comedy">😂 Comedy</option>
+                <option value="Drama">🎭 Drama</option>
+                <option value="Romance">❤️ Romance</option>
+                <option value="Thriller">😱 Thriller</option>
+            </select>
+            <button onclick="getMovieRecommendations()">🎬 Get Movies</button>
+            <div id="movie_recommendations"></div>
+        </div>
+
+        <div class="recommendations">
+            <h2>🎵 Music</h2>
+            <a href="https://open.spotify.com/" target="_blank" rel="noopener noreferrer" 
+               style="display: inline-block; background: #1DB954; color: white; padding: 10px 15px; 
+                      border-radius: 8px; text-decoration: none; font-weight: bold; margin-bottom: 10px;">
+                🎵 Open in Spotify
+            </a><br>
+            <label><strong>Select a Genre:</strong></label>
+            <select id="music_genre">
+                <option value="Sad">😢 Sad</option>
+                <option value="Love">❤️ Love</option>
+                <option value="Party">🎉 Party</option>
+                <option value="DJ Songs">🎧 DJ Songs</option>
+            </select>
+            <button onclick="getMusicRecommendations()">🎵 Get Music</button>
+            <div id="music_recommendations"></div>
+        </div>
+    </div>
+
+    <div class="story-container">
+        <div class="recommendations">
+            <h2>📖 AI Storytelling Chatbot</h2>
+            <textarea id="story_prompt" rows="3" placeholder="Once upon a time..." 
+                      style="width: 90%; padding: 10px; border-radius: 8px; border: none; margin-top: 10px;"></textarea><br>
+            <button onclick="generateStory()">📜 Generate Story</button>
+            <div id="story_output" class="story-card" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+         function getMovieRecommendations() {
+            var genre = $("#movie_genre").val();
+            $.post("/recommend_movies", { genre: genre }, function(data) {
+                $("#movie_recommendations").empty();
+                data.forEach(movie => {
+                    $("#movie_recommendations").append(`
+                        <div class="movie-card">
+                            <h3>${movie.Title}</h3>
+                            <p><strong>Year:</strong> ${movie.Year}</p>
+                            <p><strong>Rating:</strong> ⭐ ${movie.Rating.toFixed(2)}</p>
+                        </div>
+                    `);
+                });
+            });
+        }
+
+        function getMusicRecommendations() {
+            var genre = $("#music_genre").val();
+            $.post("/recommend_music", { music_genre: genre }, function(data) {
+                $("#music_recommendations").empty();
+                data.forEach(song => {
+                    $("#music_recommendations").append(`
+                        <div class="music-card">
+                            <h3>${song.song} - ${song.artist}</h3>
+                        </div>
+                    `);
+                });
+            });
+        }
+
+        function generateStory() {
+            var prompt = $("#story_prompt").val();
+            if (prompt.trim() === "") {
+                alert("❌ Please enter a story prompt!");
+                return;
+            }
+
+            $("#story_output").html("<p>⏳ Generating story...</p>").show();
+
+            $.ajax({
+                type: "POST",
+                url: "/generate_story",
+                contentType: "application/json",
+                data: JSON.stringify({ prompt: prompt }),
+                success: function(response) {
+                    $("#story_output").html(`<p>${response.story}</p>`);
+                },
+                error: function() {
+                    $("#story_output").html("<p>❌ Error generating story. Try again.</p>");
+                }
+            });
+        }
+    </script>
+
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recommendation System 🎬🎵📖</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: url('https://images.unsplash.com/photo-1541701494587-cb58502866ab') no-repeat center center/cover;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        h1 { font-size: 3em; margin-bottom: 20px; text-shadow: 4px 4px 12px rgba(0, 0, 0, 0.7); }
+        h2 { font-size: 2em; margin-top: 20px; }
+
+        select, button, textarea {
+            font-size: 16px;
+            padding: 12px;
+            margin: 10px;
+            border-radius: 12px;
+            border: none;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        button {
+            background: linear-gradient(135deg, #FFC107, #FFA000);
+            color: #222; font-weight: bold;
+            cursor: pointer; padding: 12px 20px;
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.7);
+        }
+
+        button:hover { background: linear-gradient(135deg, #FF9800, #FF6F00); box-shadow: 0 6px 16px rgba(255, 152, 0, 0.9); }
+
+        .container {
+            display: flex; justify-content: space-around; flex-wrap: wrap;
+        }
+
+        .recommendations {
+            width: 45%; min-width: 300px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(12px);
+            padding: 30px; border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7); margin-top: 30px;
+        }
+
+        .movie-card, .music-card, .story-card {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px; margin: 15px; border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7); text-align: left;
+        }
+
+        #story_output p {
+            font-size: 1.2em;
+            line-height: 1.8;
+            margin: 10px 0;
+        }
+
+        .story-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        a.spotify-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #1DB954, #1AA34A);
+            color: white; padding: 12px 20px;
+            border-radius: 12px; text-decoration: none;
+            font-weight: bold; margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🎬 Movie & 🎵 Music Recommendation System 📖</h1>
+
+    <div class="container">
+        <div class="recommendations">
+            <h2>🎥 Movies</h2>
+            <label><strong>Select a Genre:</strong></label>
+            <select id="movie_genre">
+                <option value="Action">🔥 Action</option>
+                <option value="Comedy">😂 Comedy</option>
+                <option value="Drama">🎭 Drama</option>
+                <option value="Romance">❤️ Romance</option>
+                <option value="Thriller">😱 Thriller</option>
+            </select>
+            <button onclick="getMovieRecommendations()">🎬 Get Movies</button>
+            <div id="movie_recommendations"></div>
+        </div>
+
+        <div class="recommendations">
+            <h2>🎵 Music</h2>
+            <a href="https://open.spotify.com/" target="_blank" rel="noopener noreferrer" class="spotify-link">
+                🎵 Open in Spotify
+            </a><br>
+            <label><strong>Select a Genre:</strong></label>
+            <select id="music_genre">
+                <option value="Sad">😢 Sad</option>
+                <option value="Love">❤️ Love</option>
+                <option value="Party">🎉 Party</option>
+                <option value="DJ Songs">🎧 DJ Songs</option>
+            </select>
+            <button onclick="getMusicRecommendations()">🎵 Get Music</button>
+            <div id="music_recommendations"></div>
+        </div>
+    </div>
+
+    <div class="story-container">
+        <div class="recommendations">
+            <h2>📖 AI Storytelling Chatbot</h2>
+            <textarea id="story_prompt" rows="3" placeholder="Once upon a time..."></textarea><br>
+            <button onclick="generateStory()">📜 Generate Story</button>
+            <div id="story_output" class="story-card" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        function getMovieRecommendations() {
+            var genre = $("#movie_genre").val();
+            $.post("/recommend_movies", { genre: genre }, function(data) {
+                $("#movie_recommendations").empty();
+                data.forEach(movie => {
+                    $("#movie_recommendations").append(`
+                        <div class="movie-card">
+                            <h3>${movie.Title}</h3>
+                            <p><strong>Year:</strong> ${movie.Year}</p>
+                            <p><strong>Rating:</strong> ⭐ ${movie.Rating.toFixed(2)}</p>
+                        </div>
+                    `);
+                });
+            });
+        }
+
+        function getMusicRecommendations() {
+            var genre = $("#music_genre").val();
+            $.post("/recommend_music", { music_genre: genre }, function(data) {
+                $("#music_recommendations").empty();
+                data.forEach(song => {
+                    $("#music_recommendations").append(`
+                        <div class="music-card">
+                            <h3>${song.song} - ${song.artist}</h3>
+                        </div>
+                    `);
+                });
+            });
+        }
+
+        function generateStory() {
+            var prompt = $("#story_prompt").val();
+            if (prompt.trim() === "") {
+                alert("❌ Please enter a story prompt!");
+                return;
+            }
+
+            $("#story_output").html("<p>⏳ Generating story...</p>").show();
+
+            $.ajax({
+                type: "POST",
+                url: "/generate_story",
+                contentType: "application/json",
+                data: JSON.stringify({ prompt: prompt }),
+                success: function(response) {
+                    $("#story_output").html(`<p>${response.story}</p>`);
+                },
+                error: function() {
+                    $("#story_output").html("<p>❌ Error generating story. Try again.</p>");
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>
